@@ -16,7 +16,8 @@ A one-page Power BI dashboard that shows how the **same report can present diffe
 ## What the dashboard demonstrates
 
 - **Role-based views.** Three clearance levels: Level 1 (Restricted) for Sales Staff, Level 2 (Regional) for Regional Managers and Level 3 (Unrestricted) for Executives.
-- **Region security.** A user only sees the regions they are allowed to see. The UK and North America managers each see one region, and the Executive sees all three.
+- **Dynamic row-level security.** A `DynamicSecurity` role filters on `USERPRINCIPALNAME()`, so a user only sees the regions they are allowed to see.
+- **Region security.** The UK and North America managers each see one region, and the Executive sees all three.
 - **A restricted zone.** The product margin table is masked for Level 1 users, with a "CLASSIFIED: RESTRICTED ACCESS" overlay. Managers and Executives see the full table.
 - **A live governance banner.** The top bar shows the user, role and clearance, with a green UNLOCKED or red RESTRICTED status icon.
 - **Dynamic titles.** Chart and table titles change with the discount scenario and the user's permitted regions.
@@ -45,7 +46,7 @@ Executive view (all regions) with a 10% discount scenario.
 
 ## Dashboard features
 
-- **Persona selector** (Executive, North America Manager, UK Manager, UK Staff and others) that drives every visual
+- **Persona selector** (Executive, North America Manager, UK Manager and UK Staff) that drives every visual
 - **Governance banner** and **lock status icon** built from DAX
 - **KPI cards** for Scenario Revenue, Scenario Margin, Scenario Margin %, Total Revenue, Variance vs Scenario and Total Units Sold
 - **Multi-metric monthly trend** (clustered columns) with a dynamic title
@@ -56,11 +57,17 @@ Executive view (all regions) with a 10% discount scenario.
 
 ## What I did
 
-1. **Modelled the data** with a sales fact table (`FactSales`), `DimRegion`, `DimDate` and a `DimUserSecurity` table that maps each user to a role and the regions they may access.
-2. **Created a persona table** (`Demo_Personas`) so each role can be demonstrated in Power BI Desktop, alongside the security mapping.
-3. **Built a what-if parameter** (`Discount Scenario`) and a **field parameter** (`Metric Parameter`).
-4. **Wrote DAX measures** in a Key Measures table for the scenario figures, the governance banner, role and clearance text, dynamic titles, status colour and icon, region visibility and the restricted-zone overlay.
-5. **Designed the layout** with a banner, a control panel, KPI cards, a trend chart, a regional chart and a masked table.
+1. **Modelled the data** with a sales fact table (`FactSales`), `DimRegion`, `DimDate` and a hidden `DimUserSecurity` table that maps each user email to a role and an allowed region.
+2. **Set up dynamic row-level security.** A role named `DynamicSecurity` filters `DimUserSecurity` with `[UserEmail] = USERPRINCIPALNAME()`. The filter passes through a two-way relationship on `AllowedRegion` to `DimRegion` and then to `FactSales`, so a signed-in user only sees their permitted regions in the Power BI service. The Executive has a row for every region, so sees all three.
+3. **Created a persona table** (`Demo_Personas`) and slicer, because Power BI Desktop cannot sign in as another user. A `Current User Email` measure returns the selected persona, or the real login when no persona is chosen, so every role can be demonstrated side by side.
+4. **Built a what-if parameter** (`Discount Scenario`, 0% to 30% in 5% steps) and a **field parameter** (`Metric Parameter`) for the trend chart.
+5. **Wrote DAX measures** in a Key Measures table for the scenario figures, the governance banner, role and clearance text, dynamic titles, status colour and icon, region visibility and the restricted-zone overlay. A `Can View Confidential Margin` flag decides who sees the margin table.
+6. **Designed the layout** with a banner, a control panel, KPI cards, a trend chart, a regional chart and a masked table.
+
+### How to test the security
+
+- **In Desktop:** pick a persona in the dropdown, or use *Modeling → View as → DynamicSecurity* and enter a user email from `data/DimUserSecurity.csv`.
+- **In the Power BI service:** publish the report, open the dataset's security settings and add users to the `DynamicSecurity` role. Each user then sees only their own region.
 
 ## Dataset
 
@@ -69,7 +76,8 @@ Synthetic data created for this demo. It contains no real people, companies or c
 | File | Description |
 |---|---|
 | [`data/FactSales.csv`](data/FactSales.csv) | 200 sales transactions in 2025 across 3 regions, 3 customer segments and 4 products: date, units, unit price, unit cost, revenue, total cost and margin |
-| [`data/DimUserSecurity.csv`](data/DimUserSecurity.csv) | Maps user email to role (Staff, Manager, Executive) and allowed region |
+| [`data/DimUserSecurity.csv`](data/DimUserSecurity.csv) | The table the `DynamicSecurity` role filters on: user email, role (Staff, Manager, Executive) and allowed region |
+| [`data/Demo_Personas.csv`](data/Demo_Personas.csv) | The four demo personas (UK Staff, UK Manager, NA Manager, Executive) with role title, clearance level and region scope, used by the persona dropdown |
 
 ## Repository structure
 
@@ -78,7 +86,8 @@ Synthetic data created for this demo. It contains no real people, companies or c
 │   └── RLS-Scenario-Dashboard.pbix     # Dashboard
 ├── data/
 │   ├── FactSales.csv                   # Sales transactions
-│   └── DimUserSecurity.csv             # User, role and region mapping
+│   ├── DimUserSecurity.csv             # User, role and region mapping (RLS table)
+│   └── Demo_Personas.csv               # Persona selector table
 ├── assets/                             # SVG icons and background used in the report
 └── images/                             # Dashboard screenshots
 ```
