@@ -1,0 +1,10 @@
+UserEmail,RoleName,AllowedRegion
+manager.uk@company.com,Manager,United Kingdom
+manager.eu@company.com,Manager,Central Europe
+manager.us@company.com,Manager,North America
+staff.uk@company.com,Staff,United Kingdom
+staff.eu@company.com,Staff,Central Europe
+staff.us@company.com,Staff,North America
+exec.global@company.com,Executive,United Kingdom
+exec.global@company.com,Executive,Central Europe
+exec.global@company.com,Executive,North America
