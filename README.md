@@ -9,7 +9,7 @@ A one-page Power BI dashboard that shows how the **same report can present diffe
 
 ![Sales Staff view with the margin table restricted](images/dashboard.png)
 
-*The screenshot shows the Sales Staff (UK) persona. The Restricted Zone table is masked because this role has Level 1 clearance.*
+*The screenshot shows the Sales Staff (UK) persona. This role has Level 1 clearance, so the Restricted Zone table is masked and the Scenario Margin cards show "--".*
 
 ---
 
@@ -18,7 +18,7 @@ A one-page Power BI dashboard that shows how the **same report can present diffe
 - **Role-based views.** Three clearance levels: Level 1 (Restricted) for Sales Staff, Level 2 (Regional) for Regional Managers and Level 3 (Unrestricted) for Executives.
 - **Dynamic row-level security.** A `DynamicSecurity` role filters on `USERPRINCIPALNAME()`, so a user only sees the regions they are allowed to see.
 - **Region security.** The UK and North America managers each see one region, and the Executive sees all three.
-- **A restricted zone.** The product margin table is masked for Level 1 users, with a "CLASSIFIED: RESTRICTED ACCESS" overlay. Managers and Executives see the full table.
+- **A restricted zone and margin masking.** For Level 1 users the product margin table is masked with a "CLASSIFIED: RESTRICTED ACCESS" overlay, and the Scenario Margin cards and chart series go blank. Managers and Executives see everything for their regions.
 - **A live governance banner.** The top bar shows the user, role and clearance, with a green UNLOCKED or red RESTRICTED status icon.
 - **Dynamic titles.** Chart and table titles change with the discount scenario and the user's permitted regions.
 - **A what-if discount parameter.** A slider (here set to 10%) recalculates Scenario Revenue, Scenario Margin and Scenario Margin % for the selected user.
@@ -51,7 +51,7 @@ Executive view (all regions) with a 10% discount scenario.
 - **KPI cards** for Scenario Revenue, Scenario Margin, Scenario Margin %, Total Revenue, Variance vs Scenario and Total Units Sold
 - **Multi-metric monthly trend** (clustered columns) with a dynamic title
 - **Regional performance bar chart** limited to the regions the user may see
-- **Restricted Zone table** by product that is masked with an overlay for Level 1 users
+- **Restricted Zone table** by product that is masked with an overlay for Level 1 users, with margin measures returning blank for them
 - **Discount what-if slider** and **metric field parameter**
 - Custom dark theme with SVG icons for roles, padlocks and metrics
 
@@ -61,7 +61,7 @@ Executive view (all regions) with a 10% discount scenario.
 2. **Set up dynamic row-level security.** A role named `DynamicSecurity` filters `DimUserSecurity` with `[UserEmail] = USERPRINCIPALNAME()`. The filter passes through a two-way relationship on `AllowedRegion` to `DimRegion` and then to `FactSales`, so a signed-in user only sees their permitted regions in the Power BI service. The Executive has a row for every region, so sees all three.
 3. **Created a persona table** (`Demo_Personas`) and slicer, because Power BI Desktop cannot sign in as another user. A `Current User Email` measure returns the selected persona, or the real login when no persona is chosen, so every role can be demonstrated side by side.
 4. **Built a what-if parameter** (`Discount Scenario`, 0% to 30% in 5% steps) and a **field parameter** (`Metric Parameter`) for the trend chart.
-5. **Wrote DAX measures** in a Key Measures table for the scenario figures, the governance banner, role and clearance text, dynamic titles, status colour and icon, region visibility and the restricted-zone overlay. A `Can View Confidential Margin` flag decides who sees the margin table.
+5. **Wrote DAX measures** in a Key Measures table for the scenario figures, the governance banner, role and clearance text, dynamic titles, status colour and icon, region visibility and the restricted-zone overlay. A `Role From Table` measure reads each user's role from `DimUserSecurity`, and a `Can View Confidential Margin` flag built on it decides who sees margin (the table, the cards and the chart series), so the security table is the single source of truth.
 6. **Designed the layout** with a banner, a control panel, KPI cards, a trend chart, a regional chart and a masked table.
 
 ### How to test the security
